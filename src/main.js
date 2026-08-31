@@ -65,17 +65,40 @@ class ChessGame {
 
   handleSquareClick(row, col) {
     if (this.selectedSquare) {
-      this.selectedSquare = null;
+      // Check if clicking the same square to deselect
+      if (this.selectedSquare.row === row && this.selectedSquare.col === col) {
+        this.selectedSquare = null;
+      } else {
+        // Attempt to move piece from selected square to clicked square
+        this.attemptMove(this.selectedSquare.row, this.selectedSquare.col, row, col);
+      }
     } else {
-      this.selectedSquare = { row, col };
+      // Select a square if it has a piece
+      const piece = this.board[row][col];
+      if (piece) {
+        this.selectedSquare = { row, col };
+      }
     }
     this.updateGameInfo();
     this.renderBoard();
   }
 
+  attemptMove(fromRow, fromCol, toRow, toCol) {
+    // Simple move validation - just move the piece
+    const piece = this.board[fromRow][fromCol];
+    if (piece) {
+      this.board[toRow][toCol] = piece;
+      this.board[fromRow][fromCol] = null;
+      this.selectedSquare = null;
+    }
+  }
+
   updateGameInfo() {
     const gameInfo = document.getElementById('game-info');
-    gameInfo.textContent = 'Game Status: Ready to play!';
+    const statusElement = gameInfo.querySelector('p');
+    if (statusElement) {
+      statusElement.textContent = 'Game Status: Ready to play!';
+    }
   }
 
   init() {

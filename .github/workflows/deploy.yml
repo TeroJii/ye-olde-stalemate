@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [ main ]
 
+# Note: PRs will run the full build as a CI check, but only push to main triggers deployment
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
