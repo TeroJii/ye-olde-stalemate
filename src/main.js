@@ -203,7 +203,6 @@ class ChessGame {
 
   attemptMove(fromRow, fromCol, toRow, toCol) {
     const piece = this.board[fromRow][fromCol];
-    const pieceColor = this.getPieceColor(piece);
     const targetPiece = this.board[toRow][toCol];
 
     if (targetPiece && this.getPieceColor(targetPiece) === this.currentTurn) {
@@ -211,7 +210,7 @@ class ChessGame {
       return;
     }
 
-    if (pieceColor !== this.currentTurn || !this.isValidMove(fromRow, fromCol, toRow, toCol)) {
+    if (!piece || !this.isValidMove(fromRow, fromCol, toRow, toCol)) {
       this.selectedSquare = null;
       return;
     }
