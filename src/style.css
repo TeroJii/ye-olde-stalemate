@@ -76,6 +76,11 @@ main {
   opacity: 0.8;
 }
 
+.chess-square:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: -3px;
+}
+
 .chess-square.selected {
   background: #baca44 !important;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
