@@ -110,7 +110,8 @@ class ChessGame {
     const targetPiece = this.board[toRow][toCol];
     const targetColor = this.getPieceColor(targetPiece);
     if (targetColor === this.currentTurn) {
-      this.selectedSquare = null;
+      // Switch selection to the friendly piece instead of clearing
+      this.selectedSquare = { row: toRow, col: toCol };
       return;
     }
 
