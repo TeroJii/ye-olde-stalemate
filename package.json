@@ -1,0 +1,17 @@
+{
+  "name": "ye-olde-stalemate",
+  "version": "1.0.0",
+  "description": "A simple online chess game",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["chess", "game", "web"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
