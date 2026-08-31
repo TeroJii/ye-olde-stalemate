@@ -6,6 +6,7 @@ class ChessGame {
   constructor() {
     this.board = this.initializeBoard();
     this.selectedSquare = null;
+    this.currentTurn = 'white'; // 'white' or 'black'
     this.init();
   }
 
@@ -26,6 +27,11 @@ class ChessGame {
     ];
 
     return pieces;
+  }
+
+  getPieceColor(piece) {
+    if (!piece) return null;
+    return piece === piece.toUpperCase() ? 'white' : 'black';
   }
 
   getPieceSymbol(piece) {
@@ -49,6 +55,11 @@ class ChessGame {
         const square = document.createElement('div');
         square.className = 'chess-square';
         square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+        
+        if (this.selectedSquare && this.selectedSquare.row === row && this.selectedSquare.col === col) {
+          square.classList.add('selected');
+        }
+        
         square.dataset.row = row;
         square.dataset.col = col;
 
@@ -64,6 +75,9 @@ class ChessGame {
   }
 
   handleSquareClick(row, col) {
+    const clickedPiece = this.board[row][col];
+    const clickedPieceColor = this.getPieceColor(clickedPiece);
+
     if (this.selectedSquare) {
       // Check if clicking the same square to deselect
       if (this.selectedSquare.row === row && this.selectedSquare.col === col) {
@@ -73,9 +87,8 @@ class ChessGame {
         this.attemptMove(this.selectedSquare.row, this.selectedSquare.col, row, col);
       }
     } else {
-      // Select a square if it has a piece
-      const piece = this.board[row][col];
-      if (piece) {
+      // Select a square if it has a piece of the current player
+      if (clickedPiece && clickedPieceColor === this.currentTurn) {
         this.selectedSquare = { row, col };
       }
     }
@@ -84,20 +97,38 @@ class ChessGame {
   }
 
   attemptMove(fromRow, fromCol, toRow, toCol) {
-    // Simple move validation - just move the piece
     const piece = this.board[fromRow][fromCol];
-    if (piece) {
-      this.board[toRow][toCol] = piece;
-      this.board[fromRow][fromCol] = null;
+    const pieceColor = this.getPieceColor(piece);
+
+    // Validate that the piece belongs to the current player
+    if (pieceColor !== this.currentTurn) {
       this.selectedSquare = null;
+      return;
     }
+
+    // Validate that the destination doesn't have a friendly piece
+    const targetPiece = this.board[toRow][toCol];
+    const targetColor = this.getPieceColor(targetPiece);
+    if (targetColor === this.currentTurn) {
+      this.selectedSquare = null;
+      return;
+    }
+
+    // Move the piece
+    this.board[toRow][toCol] = piece;
+    this.board[fromRow][fromCol] = null;
+    this.selectedSquare = null;
+    
+    // Switch turn
+    this.currentTurn = this.currentTurn === 'white' ? 'black' : 'white';
   }
 
   updateGameInfo() {
     const gameInfo = document.getElementById('game-info');
     const statusElement = gameInfo.querySelector('p');
     if (statusElement) {
-      statusElement.textContent = 'Game Status: Ready to play!';
+      const turnText = this.currentTurn === 'white' ? 'White' : 'Black';
+      statusElement.textContent = `${turnText}'s Turn`;
     }
   }
 
