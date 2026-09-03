@@ -7,6 +7,8 @@ class ChessGame {
     this.board = this.initializeBoard();
     this.selectedSquare = null;
     this.currentTurn = 'white'; // 'white' or 'black'
+    this.gameOver = false;
+    this.winnerMessage = '';
     this.init();
   }
 
@@ -83,9 +85,9 @@ class ChessGame {
     return true;
   }
 
-  isValidMove(fromRow, fromCol, toRow, toCol) {
-    const piece = this.board[fromRow][fromCol];
-    const targetPiece = this.board[toRow][toCol];
+  isPseudoValidMove(fromRow, fromCol, toRow, toCol, board) {
+    const piece = board[fromRow][fromCol];
+    const targetPiece = board[toRow][toCol];
 
     if (!piece || (fromRow === toRow && fromCol === toCol)) {
       return false;
@@ -103,6 +105,19 @@ class ChessGame {
     const absRowDiff = Math.abs(rowDiff);
     const absColDiff = Math.abs(colDiff);
 
+    const isPathClearOnBoard = (fr, fc, tr, tc) => {
+      const rowStep = Math.sign(tr - fr);
+      const colStep = Math.sign(tc - fc);
+      let r = fr + rowStep;
+      let c = fc + colStep;
+      while (r !== tr || c !== tc) {
+        if (board[r][c]) return false;
+        r += rowStep;
+        c += colStep;
+      }
+      return true;
+    };
+
     switch (piece.toLowerCase()) {
       case 'p': {
         const moveDirection = pieceColor === 'white' ? -1 : 1;
@@ -114,7 +129,7 @@ class ChessGame {
           }
 
           if (fromRow === startingRow && rowDiff === moveDirection * 2) {
-            return this.board[fromRow + moveDirection][fromCol] === null;
+            return board[fromRow + moveDirection][fromCol] === null;
           }
 
           return false;
@@ -126,15 +141,15 @@ class ChessGame {
         if (rowDiff !== 0 && colDiff !== 0) {
           return false;
         }
-        return this.isPathClear(fromRow, fromCol, toRow, toCol);
+        return isPathClearOnBoard(fromRow, fromCol, toRow, toCol);
       case 'b':
         if (absRowDiff !== absColDiff) {
           return false;
         }
-        return this.isPathClear(fromRow, fromCol, toRow, toCol);
+        return isPathClearOnBoard(fromRow, fromCol, toRow, toCol);
       case 'q':
         if (rowDiff === 0 || colDiff === 0 || absRowDiff === absColDiff) {
-          return this.isPathClear(fromRow, fromCol, toRow, toCol);
+          return isPathClearOnBoard(fromRow, fromCol, toRow, toCol);
         }
         return false;
       case 'n':
@@ -146,9 +161,76 @@ class ChessGame {
     }
   }
 
+  isInCheck(color, board) {
+    const kingPiece = color === 'white' ? 'K' : 'k';
+    let kingRow = -1;
+    let kingCol = -1;
+
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r][c] === kingPiece) {
+          kingRow = r;
+          kingCol = c;
+        }
+      }
+    }
+
+    if (kingRow === -1) return false;
+
+    const opponentColor = color === 'white' ? 'black' : 'white';
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        if (board[r][c] && this.getPieceColor(board[r][c]) === opponentColor) {
+          if (this.isPseudoValidMove(r, c, kingRow, kingCol, board)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
+
+  wouldLeaveKingInCheck(fromRow, fromCol, toRow, toCol) {
+    const piece = this.board[fromRow][fromCol];
+    const color = this.getPieceColor(piece);
+
+    const boardCopy = this.board.map(row => [...row]);
+    boardCopy[toRow][toCol] = boardCopy[fromRow][fromCol];
+    boardCopy[fromRow][fromCol] = null;
+
+    return this.isInCheck(color, boardCopy);
+  }
+
+  isValidMove(fromRow, fromCol, toRow, toCol) {
+    if (!this.isPseudoValidMove(fromRow, fromCol, toRow, toCol, this.board)) {
+      return false;
+    }
+    return !this.wouldLeaveKingInCheck(fromRow, fromCol, toRow, toCol);
+  }
+
+  getLegalMoves(color) {
+    const moves = [];
+    for (let fromRow = 0; fromRow < 8; fromRow++) {
+      for (let fromCol = 0; fromCol < 8; fromCol++) {
+        if (this.getPieceColor(this.board[fromRow][fromCol]) !== color) continue;
+        for (let toRow = 0; toRow < 8; toRow++) {
+          for (let toCol = 0; toCol < 8; toCol++) {
+            if (this.isValidMove(fromRow, fromCol, toRow, toCol)) {
+              moves.push({ fromRow, fromCol, toRow, toCol });
+            }
+          }
+        }
+      }
+    }
+    return moves;
+  }
+
   renderBoard() {
     const chessboard = document.getElementById('chessboard');
     chessboard.innerHTML = '';
+
+    const inCheck = !this.gameOver && this.isInCheck(this.currentTurn, this.board);
+    const kingPiece = this.currentTurn === 'white' ? 'K' : 'k';
 
     for (let row = 0; row < 8; row++) {
       for (let col = 0; col < 8; col++) {
@@ -161,6 +243,8 @@ class ChessGame {
 
         if (this.selectedSquare && this.selectedSquare.row === row && this.selectedSquare.col === col) {
           square.classList.add('selected');
+        } else if (inCheck && this.board[row][col] === kingPiece) {
+          square.classList.add('in-check');
         }
 
         square.dataset.row = row;
@@ -184,6 +268,8 @@ class ChessGame {
   }
 
   handleSquareClick(row, col) {
+    if (this.gameOver) return;
+
     const clickedPiece = this.board[row][col];
     const clickedPieceColor = this.getPieceColor(clickedPiece);
 
@@ -219,15 +305,31 @@ class ChessGame {
     this.board[fromRow][fromCol] = null;
     this.selectedSquare = null;
 
-    this.currentTurn = this.currentTurn === 'white' ? 'black' : 'white';
+    const nextTurn = this.currentTurn === 'white' ? 'black' : 'white';
+    this.currentTurn = nextTurn;
+
+    if (this.getLegalMoves(this.currentTurn).length === 0) {
+      this.gameOver = true;
+      if (this.isInCheck(this.currentTurn, this.board)) {
+        const winner = this.currentTurn === 'white' ? 'Black' : 'White';
+        this.winnerMessage = `Checkmate! ${winner} wins!`;
+      } else {
+        this.winnerMessage = "Stalemate! It's a draw!";
+      }
+    }
   }
 
   updateGameInfo() {
     const gameInfo = document.getElementById('game-info');
     const statusElement = gameInfo.querySelector('p');
     if (statusElement) {
-      const turnText = this.currentTurn === 'white' ? 'White' : 'Black';
-      statusElement.textContent = `${turnText}'s Turn`;
+      if (this.gameOver) {
+        statusElement.textContent = this.winnerMessage;
+      } else {
+        const turnText = this.currentTurn === 'white' ? 'White' : 'Black';
+        const inCheck = this.isInCheck(this.currentTurn, this.board);
+        statusElement.textContent = inCheck ? `${turnText}'s Turn - Check!` : `${turnText}'s Turn`;
+      }
     }
   }
 
