@@ -86,7 +86,7 @@ main {
   box-shadow: inset 0 0 5px rgba(180, 0, 0, 0.5);
 }
 
-
+.chess-square.selected {
   background: #baca44 !important;
   box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
 }
