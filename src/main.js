@@ -73,7 +73,8 @@ class ChessGame {
       return false;
     }
 
-    return (piece === 'P' && row === 0) || (piece === 'p' && row === 7);
+    const pieceColor = this.getPieceColor(piece);
+    return (pieceColor === 'white' && row === 0) || (pieceColor === 'black' && row === 7);
   }
 
   getPromotionPiece(pieceColor) {
