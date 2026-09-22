@@ -68,6 +68,42 @@ class ChessGame {
     return `${pieceColor} ${this.getPieceName(piece)} at ${squareName}`;
   }
 
+  isPromotionSquare(piece, row) {
+    if (!piece || piece.toLowerCase() !== 'p') {
+      return false;
+    }
+
+    const pieceColor = this.getPieceColor(piece);
+    return (pieceColor === 'white' && row === 0) || (pieceColor === 'black' && row === 7);
+  }
+
+  getPromotionPiece(pieceColor) {
+    const availablePieces = {
+      queen: pieceColor === 'white' ? 'Q' : 'q',
+      rook: pieceColor === 'white' ? 'R' : 'r',
+      bishop: pieceColor === 'white' ? 'B' : 'b',
+      knight: pieceColor === 'white' ? 'N' : 'n',
+    };
+
+    const promptMessage = 'Promote pawn to: queen, rook, bishop, or knight';
+
+    while (true) {
+      const choice = window.prompt(promptMessage, 'queen');
+
+      if (choice === null) {
+        window.alert('Promotion cancelled. The pawn will be promoted to a queen.');
+        return availablePieces.queen;
+      }
+
+      const normalizedChoice = choice.trim().toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(availablePieces, normalizedChoice)) {
+        return availablePieces[normalizedChoice];
+      }
+
+      window.alert('Please choose queen, rook, bishop, or knight.');
+    }
+  }
+
   isPathClear(fromRow, fromCol, toRow, toCol) {
     const rowStep = Math.sign(toRow - fromRow);
     const colStep = Math.sign(toCol - fromCol);
@@ -303,6 +339,11 @@ class ChessGame {
 
     this.board[toRow][toCol] = piece;
     this.board[fromRow][fromCol] = null;
+
+    if (this.isPromotionSquare(piece, toRow)) {
+      this.board[toRow][toCol] = this.getPromotionPiece(this.getPieceColor(piece));
+    }
+
     this.selectedSquare = null;
 
     const nextTurn = this.currentTurn === 'white' ? 'black' : 'white';
