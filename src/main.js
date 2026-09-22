@@ -68,6 +68,28 @@ class ChessGame {
     return `${pieceColor} ${this.getPieceName(piece)} at ${squareName}`;
   }
 
+  isPromotionSquare(piece, row) {
+    if (!piece || piece.toLowerCase() !== 'p') {
+      return false;
+    }
+
+    return (piece === 'P' && row === 0) || (piece === 'p' && row === 7);
+  }
+
+  getPromotionPiece(pieceColor) {
+    const availablePieces = {
+      queen: pieceColor === 'white' ? 'Q' : 'q',
+      rook: pieceColor === 'white' ? 'R' : 'r',
+      bishop: pieceColor === 'white' ? 'B' : 'b',
+      knight: pieceColor === 'white' ? 'N' : 'n',
+    };
+
+    const promptMessage = 'Promote pawn to: queen, rook, bishop, or knight';
+    const choice = window.prompt(promptMessage, 'queen')?.trim().toLowerCase();
+
+    return availablePieces[choice] || availablePieces.queen;
+  }
+
   isPathClear(fromRow, fromCol, toRow, toCol) {
     const rowStep = Math.sign(toRow - fromRow);
     const colStep = Math.sign(toCol - fromCol);
@@ -303,6 +325,11 @@ class ChessGame {
 
     this.board[toRow][toCol] = piece;
     this.board[fromRow][fromCol] = null;
+
+    if (this.isPromotionSquare(piece, toRow)) {
+      this.board[toRow][toCol] = this.getPromotionPiece(this.currentTurn);
+    }
+
     this.selectedSquare = null;
 
     const nextTurn = this.currentTurn === 'white' ? 'black' : 'white';
