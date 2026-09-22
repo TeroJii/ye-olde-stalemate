@@ -95,7 +95,7 @@ class ChessGame {
       }
 
       const normalizedChoice = choice.trim().toLowerCase();
-      if (availablePieces[normalizedChoice]) {
+      if (Object.hasOwn(availablePieces, normalizedChoice)) {
         return availablePieces[normalizedChoice];
       }
 
