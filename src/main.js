@@ -96,7 +96,7 @@ class ChessGame {
       }
 
       const normalizedChoice = choice.trim().toLowerCase();
-      if (Object.hasOwn(availablePieces, normalizedChoice)) {
+      if (Object.prototype.hasOwnProperty.call(availablePieces, normalizedChoice)) {
         return availablePieces[normalizedChoice];
       }
 
