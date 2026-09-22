@@ -85,9 +85,22 @@ class ChessGame {
     };
 
     const promptMessage = 'Promote pawn to: queen, rook, bishop, or knight';
-    const choice = window.prompt(promptMessage, 'queen')?.trim().toLowerCase();
 
-    return availablePieces[choice] || availablePieces.queen;
+    while (true) {
+      const choice = window.prompt(promptMessage, 'queen');
+
+      if (choice === null) {
+        window.alert('Promotion cancelled. The pawn will be promoted to a queen.');
+        return availablePieces.queen;
+      }
+
+      const normalizedChoice = choice.trim().toLowerCase();
+      if (availablePieces[normalizedChoice]) {
+        return availablePieces[normalizedChoice];
+      }
+
+      window.alert('Please choose queen, rook, bishop, or knight.');
+    }
   }
 
   isPathClear(fromRow, fromCol, toRow, toCol) {
@@ -327,7 +340,7 @@ class ChessGame {
     this.board[fromRow][fromCol] = null;
 
     if (this.isPromotionSquare(piece, toRow)) {
-      this.board[toRow][toCol] = this.getPromotionPiece(this.currentTurn);
+      this.board[toRow][toCol] = this.getPromotionPiece(this.getPieceColor(piece));
     }
 
     this.selectedSquare = null;
